@@ -59,5 +59,8 @@ def convert_column_to_rdkit_mol(df,
     else:
         raise ValueError('unrecognized molecule column type')
     for mv in df[molecule_column_param]:
-        yield converter(mv)
+        if mv is None:
+            yield None
+        else:
+            yield converter(mv)
     return

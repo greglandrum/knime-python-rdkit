@@ -156,6 +156,10 @@ class GetParentMoleculeNode(knext.PythonNode):
                     mol.UpdatePropertyCache(strict=False)
                     parent = self.standardization_actions[self.stand_action_param](
                         mol, skipStandardize=True)
+                    try:
+                        Chem.SanitizeMol(parent)
+                    except:
+                        parent = None
                 pmols.append(parent)
                 progress += add_to_progress
                 exec_context.set_progress(progress=progress)
