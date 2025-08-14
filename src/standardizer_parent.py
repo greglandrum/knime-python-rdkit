@@ -128,12 +128,16 @@ class GetParentMoleculeNode(knext.PythonNode):
             knext.Column(ktype=Chem.Mol, name="Parent Molecule"))
 
     def execute(self, exec_context: knext.ExecutionContext,
-                input_1: knext.Table):
+                input_1: knext.Table,
+                force_molecule_type = None):
         if self.molecule_column_param is None:
             raise AttributeError(
                 "Molecule column was not selected in configuration dialog.")
 
-        molecule_column_type = input_1.schema[self.molecule_column_param].ktype
+        if force_molecule_type is not None:
+            molecule_column_type = force_molecule_type
+        else:
+            molecule_column_type = input_1.schema[self.molecule_column_param].ktype
         progress = 0.0
         add_to_progress = 1 / input_1.num_rows
         output_table = knext.BatchOutputTable.create()
