@@ -1,3 +1,11 @@
+"""
+Part of the RDKit Python extension. 
+
+@author Alice Krebs, KNIME GmbH, Konstanz, Germany
+@author Steffen Fissler, KNIME GmbH, Konstanz, Germany
+@author Greg Landrum, ETH Zurich, Switzerland
+"""
+
 import knime.extension as knext
 from rdkit import Chem
 import knime.types.chemistry as cet  # To work with and compare against chemical data types like SMILES,...
@@ -7,8 +15,8 @@ LOGGER = logging.getLogger(__name__)
 category = knext.category(
     '/community/rdkit',
     'python_nodes',
-    'New RDKit Nodes',
-    'RDKit nodes which are written in Python (still exploratory)',
+    'Python RDKit Nodes',
+    'RDKit nodes which are written in Python',
     icon='./icons/category_rdkit.png')
 
 ctabTypes = (
