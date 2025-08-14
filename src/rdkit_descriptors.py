@@ -63,6 +63,45 @@ import NP_Score
 from NP_Score import npscorer
 LOGGER = logging.getLogger(__name__)
 
+_fscore = None
+def getMolDescriptors(mol, missingVal=None):
+    global _fscore
+    res = {}
+    if _fscore is None:
+        _fscore = npscorer.readNPModel()
+    for nm,fn in Descriptors._descList:
+        if nm == "Ipc":
+            continue
+        try:
+            val = fn(mol)
+        except ValueError:
+            import traceback
+            traceback.print_exc()
+            val = missingVal
+        res[nm] = val
+        res['TPSA_includeSandP'] = Descriptors.TPSA(mol, includeSandP=True)
+        res['SA_score'] = sascorer.calculateScore(mol)
+        res['NP_Score'] = npscorer.scoreMol(mol,_fscore)
+    for k,v in res.items():
+        if isinstance(v, float):
+            res[k] = np.float64(v)
+    return res
+
+def getDescriptorDataTypes(missingVal=None):
+    res = {}
+    mol = Chem.MolFromSmiles('CCO')
+    desc = getMolDescriptors(mol)
+    for k, v in desc.items():
+        try:
+            tp = type(v)
+        except:
+            import traceback
+            traceback.print_exc()
+            tp = missingVal
+        if isinstance(tp, float):
+            tp = np.float64
+        res[k] = tp
+    return res
 
 @knext.node(
     name="RDKit Descriptor Calculator",
@@ -82,7 +121,7 @@ class ExtensiveDescriptorCalculator:
     """ This new descriptor calculator node calculates almost all descriptors available in the RDKit Python package.
     
     This new descriptor calculator node calculates almost all descriptors available in the RDKit Python package (in comparison to the existing node that only implemented a selection of them). 
-    It also includes the SA and NP score, as well as the TPSA including polar sulfur and phosphate. It does not calculare the Ipc descriptor. 
+    It also includes the SA and NP score, as well as the TPSA including polar sulfur and phosphorous. It does not calculare the Ipc descriptor. 
     """
 
     molecule_column_param = knext.ColumnParameter(
@@ -92,7 +131,6 @@ class ExtensiveDescriptorCalculator:
         column_filter=utils.column_is_convertible_to_mol,
         include_row_key=False,
         include_none_column=False)   
-
     def configure(self, config_context, input_schema_1: knext.Schema):
         if self.molecule_column_param is None:
             # input column not specified, auto select the first compatible column
@@ -149,42 +187,3 @@ class ExtensiveDescriptorCalculator:
             output_table.append(df)
         return output_table
 
-_fscore = None
-def getMolDescriptors(mol, missingVal=None):
-    global _fscore
-    res = {}
-    if _fscore is None:
-        _fscore = npscorer.readNPModel()
-    for nm,fn in Descriptors._descList:
-        if nm == "Ipc":
-            continue
-        try:
-            val = fn(mol)
-        except ValueError:
-            import traceback
-            traceback.print_exc()
-            val = missingVal
-        res[nm] = val
-        res['TPSA_includeSandP'] = Descriptors.TPSA(mol, includeSandP=True)
-        res['SA_score'] = sascorer.calculateScore(mol)
-        res['NP_Score'] = npscorer.scoreMol(mol,_fscore)
-    for k,v in res.items():
-        if isinstance(v, float):
-            res[k] = np.float64(v)
-    return res
-
-def getDescriptorDataTypes(missingVal=None):
-    res = {}
-    mol = Chem.MolFromSmiles('CCO')
-    desc = getMolDescriptors(mol)
-    for k, v in desc.items():
-        try:
-            tp = type(v)
-        except:
-            import traceback
-            traceback.print_exc()
-            tp = missingVal
-        if isinstance(tp, float):
-            tp = np.float64
-        res[k] = tp
-    return res
