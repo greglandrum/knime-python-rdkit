@@ -1,4 +1,4 @@
 org.rdkit.first_extension: # {group_id}.{name} from the knime.yml
-  src: c:/Users/glandrum/Code/knime-python-extension-template-master # Path to folder containing the extension files
-  conda_env_path: c:/Users/glandrum/Code/knime-python-extension-template-master/.pixi/envs/default # Path to the Python environment to use (use an absolute path)
-  debug_mode: true # Optional line, if set to true, it will always use the latest changes of execute/configure, when that method is used within the KNIME Analytics Platform
+  src: C:/knime-python/knime-python-rdkit # Path to folder containing the extension files
+  conda_env_path: C:/Users/alice.krebs/Downloads/knime_rdkit_python_demo-master/knime_rdkit_python_demo-master/.pixi/envs/default # Path to the Python environment to use (use an absolute path)
+  debug_mode: false # Optional line, if set to true, it will always use the latest changes of execute/configure, when that method is used within the KNIME Analytics Platform

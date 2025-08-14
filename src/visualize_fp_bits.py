@@ -43,19 +43,15 @@
 # ------------------------------------------------------------------------
 """
 Part of the RDKit Python extension. Node 'Visualize Morgan fingerprint bits'.
-
+@author Greg Landrum, ETH Zurich, Zurich, Switzerland
 @author Alice Krebs, KNIME GmbH, Konstanz, Germany
-@author Steffen Fissler, KNIME GmbH, Konstanz, Germany
 """
 
 import logging
 import knime_extension as knext
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
-try:
-    from rdkit.Chem.Draw import IPythonConsole
-except ImportError:
-    IPythonConsole = None
+from rdkit.Chem.Draw import IPythonConsole
 from rdkit.Chem import Draw
 from new_rdkit_nodes import utils
 
@@ -63,36 +59,17 @@ from PIL import Image
 from io import BytesIO
 
 LOGGER = logging.getLogger(__name__)
-if IPythonConsole is not None:
-    IPythonConsole.UninstallIPythonRenderer()
+IPythonConsole.UninstallIPythonRenderer()
 
 
-@knext.node(name="Visualize Morgan fingerprint bits",
-            node_type=knext.NodeType.MANIPULATOR,
-            icon_path="./icons/VisualizeFPBits.png",
-            category=utils.category)
-@knext.input_table(name="Input table 1",
-                   description="Input table 1 with molecules")
-@knext.input_table(name="Input table 2",
-                   description="Input table 2 with Morgan fingerprint bits")
-@knext.output_table(
-    name="Highlighted bits",
-    description="Output tables including images of the highlighted bits",
-)
-class visualizemorganfpbits(knext.PythonNode):
+class visualizefpbits(knext.PythonNode):
     """
-    This node has a description, and I will change it once I figured out the code...
+    ---
     """
-
     number_bits = knext.IntParameter("Number of bits",
                                      "Define the number of bits",
                                      1024,
                                      min_value=0)
-    radius = knext.IntParameter("FP radius",
-                                "Define the number of the FP radius",
-                                2,
-                                min_value=0)
-
     molecule_column_param = knext.ColumnParameter(
         label="Molecule column",
         description=
@@ -117,12 +94,20 @@ class visualizemorganfpbits(knext.PythonNode):
                   input_schema_2):
         return input_schema_1
 
+    def draw_molecule_with_bit(self, mol, idx, bi):
+        raise NotImplementedError("Needs to be defined in derived class")
+
+    def init_generator(self):
+        raise NotImplementedError("needs to be defined in derived class")
+
     def execute(self, exec_context: knext.ExecutionContext,
                 input_1: knext.Table, input_2: knext.Table):
         if self.molecule_column_param is None or self.bits_column_param is None:
             raise AttributeError(
                 "Molecule or Bits column was not selected in configuration dialog."
             )
+
+        fpgen, ao = self.init_generator()
 
         df = input_1.to_pandas()
 
@@ -141,19 +126,17 @@ class visualizemorganfpbits(knext.PythonNode):
             cols[i] = []
 
         for mol in mols:
-            bi = {}  # defining a dictionary
-            fp = rdMolDescriptors.GetMorganFingerprintAsBitVect(
-                mol, radius=self.radius, nBits=self.number_bits, bitInfo=bi
-            )  # calculate fingerprint with user-defined radius and nr of bits
+            fp = fpgen.GetFingerprint(mol, additionalOutput=ao)
             Chem.Kekulize(mol)  # kekulize molecules
             for i, idx in enumerate(
                     fp_ids
             ):  # if rendering fails, append an empty cell. Don't make if-else to catch the error
                 if fp[idx]:
                     try:
-                        img = Draw.DrawMorganBit(mol, idx, bi, useSVG=False)
-                        sio = BytesIO(img)
-                        img = Image.open(sio)
+                        # img = Draw.DrawMorganBit(mol, idx, bi, useSVG=True)
+                        img = self.draw_molecule_with_bit(mol, idx, ao)
+                        # sio = BytesIO(img)
+                        # img = Image.open(sio)
                         cols[i].append(img)
                     except:
                         import traceback

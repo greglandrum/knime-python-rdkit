@@ -70,7 +70,7 @@ if IPythonConsole is not None:
 @knext.node(
     name="Visualize bits of RDKit fingerprints",
     node_type=knext.NodeType.MANIPULATOR,
-    icon_path="icon.png",
+    icon_path="./icons/VisualizeFPBits.png",
     category=category)
 @knext.input_table(name="Input table 1", description="Input table 1 with molecules")
 @knext.input_table(name="Input table 2", description="Input table 2 with RDKit fingerprint bits")
