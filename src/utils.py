@@ -9,7 +9,7 @@ category = knext.category(
     'python_nodes',
     'New RDKit Nodes',
     'RDKit nodes which are written in Python (still exploratory)',
-    icon='category_rdkit.png')
+    icon='./icons/category_rdkit.png')
 
 ctabTypes = (
     knext.logical(cet.MolValue),
