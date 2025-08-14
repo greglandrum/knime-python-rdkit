@@ -66,7 +66,7 @@ RDLogger.DisableLog("rdApp.info")
 @knext.node(
     name="Normalize Molecule",
     node_type=knext.NodeType.MANIPULATOR,
-    icon_path="icon.png",
+    icon_path="./icons/Standardizer.png",
     category=utils.category,
 )
 @knext.input_table(name="Input Data", description="Input data with molecules")
