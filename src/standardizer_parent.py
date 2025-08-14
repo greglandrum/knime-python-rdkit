@@ -52,11 +52,7 @@ Part of the RDKit Python extension. Node 'Get Parent Molecule'.
 import logging
 import knime.extension as knext
 from rdkit import Chem
-import pandas as pd
-import knime.types.chemistry as cet  # To work with and compare against chemical data types like SMILES,...
-import pyarrow as pa
 from . import utils
-#import knime_arrow_pandas  # TODO Refactor once ticket AP-19209 is implemented
 
 
 import logging
@@ -79,7 +75,7 @@ RDLogger.DisableLog("rdApp.info")
 )
 @knext.input_table(name="Input Data", description="Input data with molecules")
 @knext.output_table(name="Output Data",
-                    description="Input data with parent molecules")
+                    description="Input data with parent molecules in a new column")
 class GetParentMoleculeNode(knext.PythonNode):
     """Returns standardized parent structure of a molecule.
 
@@ -117,13 +113,13 @@ class GetParentMoleculeNode(knext.PythonNode):
     stand_action_param = knext.StringParameter(
         label="Standardization action",
         description=action_description,
-        default_value="Super parent",
+        default_value="Remove charge",
         enum=stand_action_list,
     )
 
     def configure(self, configure_context, input_schema_1: knext.Schema):
-        #LOGGER.warning(f'types: {knext.supported_value_types()}')
         if self.molecule_column_param is None:
+            # input column not specified, auto select the first compatible column
             for col in input_schema_1:
                 if utils.column_is_convertible_to_mol(col):
                     self.molecule_column_param = col.name
@@ -137,28 +133,25 @@ class GetParentMoleculeNode(knext.PythonNode):
             raise AttributeError(
                 "Molecule column was not selected in configuration dialog.")
 
-        # Prepare mols: If input column consists of rdkit molecules, use them;
-        # if input column consists of SMILES, convert to rdkit molecules
         molecule_column_type = input_1.schema[self.molecule_column_param].ktype
-        # ToDo: batch input/output
-        df = input_1.to_pandas()
-        mols = utils.convert_column_to_rdkit_mol(df,
-                                                 molecule_column_type,
-                                                 self.molecule_column_param,
-                                                 sanitizeOnParse=False)
-
         progress = 0.0
         add_to_progress = 1 / input_1.num_rows
-        pmols = []
-        for mol in mols:
-            mol.UpdatePropertyCache(strict=False)
-            parent = self.standardization_actions[self.stand_action_param](
-                mol, skipStandardize=True)
-            pmols.append(parent)
-            progress += add_to_progress
-            exec_context.set_progress(progress=progress)
+        output_table = knext.BatchOutputTable.create()
+        for batch in input_1.to_batches():
+            df = batch.to_pandas()
+            mols = utils.convert_column_to_rdkit_mol(df,
+                                                     molecule_column_type,
+                                                     self.molecule_column_param,
+                                                     sanitizeOnParse=False)
+            pmols = []
+            for mol in mols:
+                mol.UpdatePropertyCache(strict=False)
+                parent = self.standardization_actions[self.stand_action_param](
+                    mol, skipStandardize=True)
+                pmols.append(parent)
+                progress += add_to_progress
+                exec_context.set_progress(progress=progress)
 
-        # Add the parent molecule to the pandas dataframe as a new column
-        df["Parent Molecule"] = pmols
-        # Convert the processed table back from a pandas DataFrame to a KNIME table
-        return knext.Table.from_pandas(df)
+            df["Parent Molecule"] = pmols
+            output_table.append(df)
+        return output_table
