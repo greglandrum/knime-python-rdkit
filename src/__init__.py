@@ -2,6 +2,8 @@
 # import new_rdkit_nodes.MolFormula
 # import new_rdkit_nodes.rgroup_highlight
 from . import standardizer_parent
+from . import rdkit_descriptors
+
 # import new_rdkit_nodes.standardizer_normalize
 #import new_rdkit_nodes.visualize_logp_contributions
 # import new_rdkit_nodes.visualize_morganfp_bits
