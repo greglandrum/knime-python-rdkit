@@ -74,7 +74,7 @@ RDLogger.DisableLog("rdApp.info")
 @knext.node(
     name="Get Parent Molecule",
     node_type=knext.NodeType.MANIPULATOR,
-    icon_path="chem.png",
+    icon_path="../icons/chem.png",
     category=utils.category,
 )
 @knext.input_table(name="Input Data", description="Input data with molecules")
