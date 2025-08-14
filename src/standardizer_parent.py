@@ -52,6 +52,7 @@ Part of the RDKit Python extension. Node 'Get Parent Molecule'.
 import logging
 import knime.extension as knext
 from rdkit import Chem
+
 from . import utils
 
 
@@ -149,9 +150,12 @@ class GetParentMoleculeNode(knext.PythonNode):
                                                      sanitizeOnParse=False)
             pmols = []
             for mol in mols:
-                mol.UpdatePropertyCache(strict=False)
-                parent = self.standardization_actions[self.stand_action_param](
-                    mol, skipStandardize=True)
+                if mol is None:
+                    parent = None
+                else:
+                    mol.UpdatePropertyCache(strict=False)
+                    parent = self.standardization_actions[self.stand_action_param](
+                        mol, skipStandardize=True)
                 pmols.append(parent)
                 progress += add_to_progress
                 exec_context.set_progress(progress=progress)
