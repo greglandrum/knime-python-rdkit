@@ -104,7 +104,7 @@ def getDescriptorDataTypes(missingVal=None):
     return res
 
 @knext.node(
-    name="RDKit Descriptor Calculator",
+    name="Calculate All Descriptors",
     node_type=knext.NodeType.MANIPULATOR,
     icon_path="./icons/RDKitDescriptors.png",
     category=utils.category
