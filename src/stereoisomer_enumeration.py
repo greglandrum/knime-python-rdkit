@@ -150,31 +150,37 @@ class StereoisomerEnumeration(knext.PythonNode):
         molecule_column_type = input_1.schema[self.molecule_column_param].ktype
         identifier_column_name = input_1.schema[self.identifier_column_param].name
 
-        df = input_1.to_pandas()
-    
-        mols = utils.convert_column_to_rdkit_mol(df,
-                                                molecule_column_type,
-                                                self.molecule_column_param,
-                                                sanitizeOnParse=True)
-        
         esopt = EnumerateStereoisomers.StereoEnumerationOptions(tryEmbedding=self.tryembedding, onlyUnassigned=self.onlyunassigned, maxIsomers=1024, rand=None, unique=self.unique, onlyStereoGroups=self.onlystereogroups)
-        
+
         progress = 0.0
         add_to_progress = 1 / input_1.num_rows
-        results = []
-        for id, mol in zip(df[self.identifier_column_param], mols): 
-            if mol is None:
-                continue
-            enum_res = EnumerateStereoisomers.EnumerateStereoisomers(mol, options=esopt)
-            for i, iso in enumerate(enum_res):
-                results.append((id, i, iso))
-            progress += add_to_progress
-            exec_context.set_progress(progress=progress)
-        df_results = pd.DataFrame(results)
-        df_results.rename(columns={df_results.columns[0]: identifier_column_name, df_results.columns[1]: 'index', df_results.columns[2]: 'stereoisomer'}, inplace=True)
-        
-        if df_results[identifier_column_name].dtypes == 'int64': 
-            df_results = df_results.astype({identifier_column_name: 'int32'})
-        df_results = df_results.astype({'index': 'int32'})
+        output_table = knext.BatchOutputTable.create()
+        for batch in input_1.to_batches():
+            df = batch.to_pandas()
+    
+            mols = list(utils.convert_column_to_rdkit_mol(df,
+                                                    molecule_column_type,
+                                                    self.molecule_column_param,
+                                                    sanitizeOnParse=True))
+            results = []
+            for i in range(df.shape[0]):
+                mol = mols[i]
+                if mol is None:
+                    r = df.iloc[i].copy()
+                    r['index'] = None
+                    r['stereoisomer'] = None
+                    results.append(r.to_dict())
+                    continue
+                enum_res = EnumerateStereoisomers.EnumerateStereoisomers(mol, options=esopt)
+                for j, iso in enumerate(enum_res):
+                    r = df.iloc[i].copy()
+                    r['index'] = j
+                    r['stereoisomer'] = iso
+                    results.append(r.to_dict())
+                progress += add_to_progress
+                exec_context.set_progress(progress=progress)
+            df = pd.DataFrame(results)
+            df = df.astype({'index': 'int32'})
+            output_table.append(df)
 
-        return knext.Table.from_pandas(df_results)
+        return output_table
