@@ -53,7 +53,7 @@ from rdkit import Chem
 from rdkit.Chem import Draw
 from rdkit.Chem import EnumerateStereoisomers
 import knime.types.chemistry as cet
-from new_rdkit_nodes import utils
+from . import utils
 import pandas as pd
 import numpy as np
 LOGGER = logging.getLogger(__name__)
@@ -120,11 +120,20 @@ class StereoisomerEnumeration(knext.PythonNode):
         )
     
     def configure(self, config_context, input_schema_1: knext.Schema):
-        identifier_column_type = get_ktype_for_column(input_schema_1, self.identifier_column_param)
-        index_type = knext.int32()
-        molecule_column_type = knext.logical(Chem.rdchem.Mol)
-        schema_1 = knext.Schema([identifier_column_type, index_type, molecule_column_type], [input_schema_1[self.identifier_column_param].name, "index", "stereoisomer"])
-        return schema_1
+        if self.molecule_column_param is None:
+            # input column not specified, auto select the first compatible column
+            for col in input_schema_1:
+                if utils.column_is_convertible_to_mol(col):
+                    self.molecule_column_param = col.name
+                    break
+        if self.identifier_column_param is None:
+            # input column not specified, auto select the first compatible column
+            for col in input_schema_1:
+                if not utils.column_is_convertible_to_mol(col):
+                    self.identifier_column_param = col.name
+                    break
+        return input_schema_1.append(knext.Column(ktype=knext.int32(), name="index")).append(
+            knext.Column(ktype=Chem.Mol, name="stereoisomer"))
  
     def execute(self, exec_context: knext.ExecutionContext,
                 input_1: knext.Table):
@@ -169,10 +178,3 @@ class StereoisomerEnumeration(knext.PythonNode):
         df_results = df_results.astype({'index': 'int32'})
 
         return knext.Table.from_pandas(df_results)
-    
-# Returns the ktype of the first column which has the col_name as name
-def get_ktype_for_column(schema: knext.Schema, col_name: str):
-        for column in schema._columns:
-            if column.name == col_name:
-                return column.ktype
-            
