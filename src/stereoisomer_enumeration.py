@@ -167,7 +167,7 @@ class StereoisomerEnumeration(knext.PythonNode):
                 mol = mols[i]
                 if mol is None:
                     r = df.iloc[i].copy()
-                    r['index'] = None
+                    r['index'] = 0
                     r['stereoisomer'] = None
                     results.append(r.to_dict())
                     continue
