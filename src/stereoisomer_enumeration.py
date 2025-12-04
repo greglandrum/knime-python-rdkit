@@ -155,6 +155,7 @@ class StereoisomerEnumeration(knext.PythonNode):
         progress = 0.0
         add_to_progress = 1 / input_1.num_rows
         output_table = knext.BatchOutputTable.create()
+        ndone = 0
         for batch in input_1.to_batches():
             df = batch.to_pandas()
     
@@ -163,12 +164,15 @@ class StereoisomerEnumeration(knext.PythonNode):
                                                     self.molecule_column_param,
                                                     sanitizeOnParse=True))
             results = []
+            ridx = []
             for i in range(df.shape[0]):
                 mol = mols[i]
                 if mol is None:
                     r = df.iloc[i].copy()
                     r['index'] = 0
                     r['stereoisomer'] = None
+                    ridx.append(f'Row{ndone}')
+                    ndone += 1
                     results.append(r.to_dict())
                     continue
                 enum_res = EnumerateStereoisomers.EnumerateStereoisomers(mol, options=esopt)
@@ -176,10 +180,12 @@ class StereoisomerEnumeration(knext.PythonNode):
                     r = df.iloc[i].copy()
                     r['index'] = j
                     r['stereoisomer'] = iso
+                    ridx.append(f'Row{ndone}')
+                    ndone += 1
                     results.append(r.to_dict())
                 progress += add_to_progress
                 exec_context.set_progress(progress=progress)
-            df = pd.DataFrame(results)
+            df = pd.DataFrame(results, index=ridx)
             df = df.astype({'index': 'int32'})
             output_table.append(df)
 
