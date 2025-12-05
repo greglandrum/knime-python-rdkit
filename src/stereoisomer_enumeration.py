@@ -48,16 +48,20 @@ Part of the RDKit Python extension. Node 'Enumerate Stereoisomers'.
 """
 
 import logging
-import knime_extension as knext
+import knime.extension as knext
 from rdkit import Chem
 from rdkit.Chem import Draw
 from rdkit.Chem import EnumerateStereoisomers
-import knime.types.chemistry as cet
-from . import utils
 import pandas as pd
 import numpy as np
 LOGGER = logging.getLogger(__name__)
 
+# this is pretty gross, but we need to be able to import utils both when
+# running as part of the node/package and when running the test suite
+try:
+    import utils
+except ImportError: 
+    from . import utils
 
 @knext.node(
     name="Stereoisomer Enumeration",
@@ -136,7 +140,9 @@ class StereoisomerEnumeration(knext.PythonNode):
             knext.Column(ktype=Chem.Mol, name="stereoisomer"))
  
     def execute(self, exec_context: knext.ExecutionContext,
-                input_1: knext.Table):
+                input_1: knext.Table,
+                force_molecule_type = None,
+                force_identifier_name = None):
         if self.molecule_column_param is None:
             raise AttributeError(
             "Molecule column was not selected in configuration dialog."
@@ -147,10 +153,21 @@ class StereoisomerEnumeration(knext.PythonNode):
             "Identifier column was not selected in configuration dialog."
             )
         
-        molecule_column_type = input_1.schema[self.molecule_column_param].ktype
-        identifier_column_name = input_1.schema[self.identifier_column_param].name
+        if force_molecule_type is not None:
+            assert force_identifier_name is not None
+            molecule_column_type = force_molecule_type
+            identifier_column_name = force_identifier_name
+        else:
+            molecule_column_type = input_1.schema[self.molecule_column_param].ktype
+            identifier_column_name = input_1.schema[self.identifier_column_param].name
 
-        esopt = EnumerateStereoisomers.StereoEnumerationOptions(tryEmbedding=self.tryembedding, onlyUnassigned=self.onlyunassigned, maxIsomers=1024, rand=None, unique=self.unique, onlyStereoGroups=self.onlystereogroups)
+        esopt = EnumerateStereoisomers.StereoEnumerationOptions()
+        esopt.tryEmbedding=self.tryembedding
+        esopt.onlyUnassigned=self.onlyunassigned
+        esopt.unique=self.unique
+        # currently disabled due to a bug in the RDKit code
+        # (should be fixed in v2025.09.4)
+        #esopt.onlyStereoGroups=self.onlystereogroups
 
         progress = 0.0
         add_to_progress = 1 / input_1.num_rows

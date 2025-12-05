@@ -9,7 +9,7 @@ from rdkit.Chem.MolStandardize import rdMolStandardize
 
 import pandas as pd
 
-from . import standardizer_parent
+import standardizer_parent
 import knime.extension as knext
 import knime.extension.testing as ktest
 

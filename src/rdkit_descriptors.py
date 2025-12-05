@@ -49,19 +49,28 @@ Part of the RDKit Python extension. Node 'Descriptors'.
 import os
 import sys
 import logging
-import knime_extension as knext
+import knime.extension as knext
 import pandas as pd
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem import  Descriptors
-from . import utils
 exec_path = sys.executable
 sys.path.append(os.path.join(os.path.dirname(exec_path),'Library', 'share','RDKit','Contrib'))
 import SA_Score
 from SA_Score import sascorer
 import NP_Score
 from NP_Score import npscorer
+
+# this is pretty gross, but we need to be able to import utils both when
+# running as part of the node/package and when running the test suite
+try:
+    import utils
+except ImportError: 
+    from . import utils
+
+
 LOGGER = logging.getLogger(__name__)
+
 
 _fscore = None
 def getMolDescriptors(mol, missingVal=None):

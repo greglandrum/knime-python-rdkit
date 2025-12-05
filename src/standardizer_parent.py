@@ -53,7 +53,12 @@ import logging
 import knime.extension as knext
 from rdkit import Chem
 
-from . import utils
+# this is pretty gross, but we need to be able to import utils both when
+# running as part of the node/package and when running the test suite
+try:
+    import utils
+except ImportError: 
+    from . import utils
 
 
 import logging
