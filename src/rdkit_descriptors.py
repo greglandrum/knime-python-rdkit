@@ -54,8 +54,11 @@ import pandas as pd
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem import  Descriptors
-exec_path = sys.executable
-sys.path.append(os.path.join(os.path.dirname(exec_path),'Library', 'share','RDKit','Contrib'))
+# FIX: this needs to be resolved
+#exec_path = sys.executable
+#sys.path.append(os.path.join(os.path.dirname(exec_path), 'share','RDKit','Contrib'))
+exec_path = sys.exec_prefix
+sys.path.append(os.path.join(exec_path, 'share','RDKit','Contrib'))
 import SA_Score
 from SA_Score import sascorer
 import NP_Score
