@@ -8,3 +8,4 @@ from . import stereoisomer_enumeration
 # from . import visualize_rdkitfp_bits
 # from . import rgroup_highlight
 # from . import molecule_grid_image
+from . import stereochemistry_identifier
