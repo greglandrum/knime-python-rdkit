@@ -24,7 +24,7 @@ LOGGER = logging.getLogger(__name__)
 )
 @knext.input_table(
     name="Input Table",
-    description="Input data table with molecules"
+    description="Input data table with molecules."
 )
 @knext.output_table(
     name="Output Table",
