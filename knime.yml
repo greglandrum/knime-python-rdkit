@@ -2,7 +2,7 @@
 # It is used to define the extension's metadata and configuration.
 
 # Extension metadata
-name: python_rdkit_nodes  # Will be concatenated with the group_id to an ID
+name: python_rdkit_nodes
 group_id: org.rdkit
 description: The RDKit nodes written in Python # Human readable bundle name / description
 long_description: Extends the Java-based RDKit nodes
