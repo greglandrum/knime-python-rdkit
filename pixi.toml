@@ -21,7 +21,7 @@ knime-extension-bundling = "5.12.*"
 debugpy = "*"
 
 [feature.build.tasks]
-build = { args = [{ "arg" = "dest", "default" = "./local-update-site" }], cmd = "python ./.pixi/envs/build/bin/build_python_extension.py . {{ dest }}"}
+build = { args = [{ "arg" = "dest", "default" = "./local-update-site" }], cmd = "python ./.pixi/envs/build/bin/build_python_extension.py . {{ dest }} --update-sites-version 5.12"}
 
 [environments]
 build = {features = ["build"], no-default-feature = true}
